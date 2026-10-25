@@ -4,6 +4,32 @@ Version 0.0.0 establishes packaging and development infrastructure. No simulatio
 API is implemented. Before adding bindings or helper behavior, inspect the
 upstream headers and existing repository tooling for an implementation to reuse.
 
+## Source installation and binary compatibility
+
+Release wheels are configured for standard CPython 3.12, 3.13, and 3.14 on Linux
+x86_64 (glibc 2.28+), macOS Intel and Apple Silicon (macOS 11+), and Windows
+x86_64 and ARM64. Prebuilt wheels require no C++ compiler or Python runtime
+dependencies. To require a compatible wheel rather than fall back to compilation:
+
+```bash
+python -m pip install --only-binary=:all: agent-harmony
+```
+
+This command fails if a matching wheel is unavailable. Source builds require a
+C++20 compiler, CMake 3.29+, Python development headers, and Git for checkouts:
+
+```bash
+git clone https://github.com/michalszc/agent-harmony-python.git
+cd agent-harmony-python
+git submodule update --init external/agent-harmony
+python -m pip install .
+```
+
+Build isolation supplies the Python build tools and can supply CMake/Ninja when
+needed. An sdist includes required upstream sources and needs no Git submodule
+initialization. See [installation details](documentation/getting-started/installation.md).
+For editable contributor builds and checks, follow the environment setup below.
+
 ## Environment setup
 
 Use CPython 3.12–3.14, Git, a C++20 compiler, CMake 3.29+, GNU Make, and `jq`.
@@ -61,14 +87,18 @@ with controlled fakes; they never upload anything.
 
 ## Project layout and native integration
 
-- `src/agent_harmony/`: Python interface, `_core.pyi`, and `py.typed`.
-- `cpp/bindings/`: nanobind module sources, installed inside the Python package.
-- `external/agent-harmony/`: the upstream Git submodule; never copy its sources.
-- `tests/contracts/`: package and repository infrastructure tests.
-- `documentation/`: MkDocs sources, templates, and release notes.
-- `docs/`: generated site, ignored by Git.
-- `examples/` and `notebooks/`: maintained usage examples.
-- `scripts/` and `.github/workflows/`: reusable developer and CI tooling.
+| Directory | Purpose |
+| --- | --- |
+| `src/agent_harmony/` | Python interface, `_core.pyi`, and typed marker |
+| `cpp/bindings/` | nanobind extension sources and future bindings |
+| `external/agent-harmony/` | Upstream Git submodule pinned to an exact commit |
+| `tests/contracts/` | Installed-package and repository infrastructure tests |
+| `documentation/` | MkDocs sources, API templates, and release notes |
+| `docs/` | Generated documentation, ignored by Git |
+| `examples/`, `notebooks/` | Maintained Python and notebook examples |
+| `assets/` | Project assets |
+| `scripts/` | Build verification, validation, and release helpers |
+| `.github/workflows/` | CI, CD, docs, notebooks, releases, and maintenance |
 
 The initial module includes an upstream header to verify integration and exposes
 only version metadata. Root CMake provides a header interface instead of invoking

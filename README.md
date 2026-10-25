@@ -1,45 +1,32 @@
 # Agent-Harmony Python
 
-[![CI](https://github.com/michalszc/agent-harmony-python/actions/workflows/ci.yml/badge.svg)](https://github.com/michalszc/agent-harmony-python/actions/workflows/ci.yml)
-[![Python](https://img.shields.io/badge/python-3.12%20%E2%80%93%203.14-blue)](pyproject.toml)
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
+<p align="center">
+  <a href="https://pypi.org/project/agent-harmony/"><img src="https://img.shields.io/pypi/v/agent-harmony" alt="PyPI version"></a>
+  <a href="https://pypi.org/project/agent-harmony/"><img src="https://img.shields.io/pypi/dm/agent-harmony" alt="PyPI monthly downloads"></a>
+  <a href="https://github.com/michalszc/agent-harmony-python/blob/master/pyproject.toml"><img src="https://img.shields.io/badge/python-3.12%2B-important" alt="Python 3.12 or newer"></a>
+  <a href="https://github.com/michalszc/agent-harmony-python/actions/workflows/ci.yml"><img src="https://github.com/michalszc/agent-harmony-python/actions/workflows/ci.yml/badge.svg?branch=master" alt="CI on master"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg" alt="License: Apache 2.0"></a>
+  <a href="https://michalszc.github.io/agent-harmony-python/"><img src="https://img.shields.io/badge/docs-online-blue.svg" alt="Docs"></a>
+</p>
 
-Python bindings for the [Agent-Harmony](https://github.com/Tosiekdev/Agent-Harmony)
-C++20 agent-based modeling library, built with nanobind, CMake, and scikit-build-core.
+Python bindings for [Agent-Harmony](https://github.com/Tosiekdev/Agent-Harmony),
+an agent-based modeling library.
 
-**Version 0.0.0 is a repository foundation milestone.** It provides an importable
-package, version metadata, and a working native extension. Simulation classes and
-Agent-Harmony feature bindings are not implemented yet.
+**Version 0.0.0 is the initial package foundation.** You can import the package
+and inspect its version. Simulation classes and Agent-Harmony feature bindings
+are not implemented yet.
 
 ## Installation
 
-Use standard CPython 3.12, 3.13, or 3.14. After a release is available, install a
-prebuilt wheel without a C++ compiler:
+Once a release is available on PyPI:
 
 ```bash
-python -m pip install --only-binary=:all: agent-harmony
+pip install agent-harmony
 ```
 
-Wheels are configured for Linux x86_64 (glibc 2.28+), macOS Intel and Apple Silicon
-(macOS 11+), and Windows x86_64 and ARM64. This initialization does not publish a
-release. If a matching wheel is unavailable, the command above fails rather than
-attempting a source build. The package has no Python runtime dependencies.
+Python 3.12 or newer is required.
 
-To build from a Git checkout, install a C++20 compiler, CMake 3.29+, Python
-headers, and Git, then run:
-
-```bash
-git clone https://github.com/michalszc/agent-harmony-python.git
-cd agent-harmony-python
-git submodule update --init external/agent-harmony
-python -m pip install .
-```
-
-Build isolation supplies the Python build tools and can supply CMake/Ninja when
-needed. An sdist includes the required upstream sources and needs no Git
-submodule initialization. See [installation details](documentation/getting-started/installation.md).
-
-## Verify the package
+## Quick start
 
 ```python
 import agent_harmony
@@ -47,47 +34,25 @@ import agent_harmony
 print(agent_harmony.__version__)  # 0.0.0
 ```
 
-Importing the package loads its compiled `agent_harmony._core` extension.
-See [the Python example](examples/basic_usage.py) and
-[basic usage notebook](notebooks/basic_usage.ipynb).
+## Documentation
 
-## Development
+- [Online documentation](https://michalszc.github.io/agent-harmony-python/)
+- [Getting started](https://michalszc.github.io/agent-harmony-python/getting-started/)
+- [API reference](https://michalszc.github.io/agent-harmony-python/reference/)
+- [Release notes](https://michalszc.github.io/agent-harmony-python/release-notes/)
 
-Reuse the existing `.venv`; see [CONTRIBUTING.md](CONTRIBUTING.md) for setup,
-Make commands, testing, and release procedures.
+## Examples
 
-```bash
-make submodules
-make install-dev INSTALL_HOOKS=0
-make check
-make build
-make check-build
-make check-install
-```
+- [Basic Python example](examples/basic_usage.py)
+- [Basic usage notebook](notebooks/basic_usage.ipynb)
 
-`make help` lists the interface. Quality checks include lint, formatting, strict
-typing, tests, documentation, notebook validation, and hook configuration.
-CI runs the full suite against each wheel on every configured Python/platform
-combination, in addition to the main quality checks.
+## Contributing
 
-## Repository layout
-
-| Directory | Purpose |
-| --- | --- |
-| `src/agent_harmony/` | Python package, native type stub, and typed marker |
-| `cpp/bindings/` | nanobind extension and future bindings |
-| `external/agent-harmony/` | Upstream Git submodule pinned to an exact commit |
-| `tests/` | Installed-package and infrastructure contracts |
-| `documentation/` | MkDocs sources and release notes |
-| `docs/` | Generated documentation, ignored by Git |
-| `examples/`, `notebooks/` | Minimal Python and notebook examples |
-| `scripts/` | Build verification, validation, and release helpers |
-| `.github/workflows/` | CI, CD, docs, notebooks, releases, and maintenance |
+See [CONTRIBUTING.md](CONTRIBUTING.md) for source installation, development setup,
+repository layout, testing, and release procedures.
 
 ## License
 
-The Python bindings and repository code are licensed under [Apache 2.0](LICENSE).
-Agent-Harmony retains its upstream [MIT license](LICENSE-UPSTREAM). The compiled
-extension incorporates nanobind under the BSD 3-Clause license and its bundled
-MIT-licensed robin-map; both notices appear in [LICENSE-NANOBIND](LICENSE-NANOBIND).
-All notices are included in wheels and source distributions; see [NOTICE](NOTICE).
+Licensed under [Apache 2.0](LICENSE). Upstream Agent-Harmony retains its
+[MIT license](LICENSE-UPSTREAM). Additional bundled notices are included in
+[LICENSE-NANOBIND](LICENSE-NANOBIND) and [NOTICE](NOTICE).
