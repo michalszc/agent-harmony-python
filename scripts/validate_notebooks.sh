@@ -70,7 +70,7 @@ add_notebooks() {
 }
 
 if [ "$#" -eq 0 ]; then
-    add_notebooks "$PROJECT_ROOT/notebooks"
+    add_notebooks "$PROJECT_ROOT/examples"
 else
     for candidate in "$@"; do
         add_notebooks "$candidate"

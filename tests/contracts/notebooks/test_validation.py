@@ -59,20 +59,28 @@ def write_notebook(path: Path, value: nbformat.NotebookNode) -> None:
     nbformat.write(value, path)
 
 
-def validate(project: Path, notebook_path: Path) -> subprocess.CompletedProcess[str]:
-    """Run the Bash validator against one fixture notebook."""
+def validate(
+    project: Path, notebook_path: Path | None = None
+) -> subprocess.CompletedProcess[str]:
+    """Run the validator against an explicit path or the default examples folder."""
+    command = ["bash", VALIDATOR.as_posix(), "--project-root", project.as_posix()]
+    if notebook_path is not None:
+        command.append(notebook_path.as_posix())
     return subprocess.run(
-        [
-            "bash",
-            VALIDATOR.as_posix(),
-            "--project-root",
-            project.as_posix(),
-            notebook_path.as_posix(),
-        ],
+        command,
         check=False,
         capture_output=True,
         text=True,
     )
+
+
+def test_discovers_notebooks_in_examples(validation_project: Path) -> None:
+    examples = validation_project / "examples"
+    examples.mkdir()
+    write_notebook(examples / "basic_usage.ipynb", notebook())
+    result = validate(validation_project)
+    assert result.returncode == 0, result.stderr
+    assert "basic_usage.ipynb" in result.stdout
 
 
 def test_accepts_valid_executed_notebook(

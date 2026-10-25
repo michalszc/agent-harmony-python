@@ -44,7 +44,7 @@ print(agent_harmony.__version__)  # 0.0.0
 ## Examples
 
 - [Basic Python example](examples/basic_usage.py)
-- [Basic usage notebook](notebooks/basic_usage.ipynb)
+- [Basic usage notebook](examples/basic_usage.ipynb)
 
 ## Contributing
 

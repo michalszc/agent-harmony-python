@@ -62,7 +62,7 @@ sdist.include = [
     "/pyproject.toml", "/CMakeLists.txt", "/Makefile", "/README.md",
     "/CONTRIBUTING.md", "/LICENSE*", "/NOTICE", "/mkdocs.yml", "/.gitmodules",
     "/src/**", "/cpp/**", "/scripts/**", "/tests/**", "/examples/**",
-    "/.github/**", "/documentation/**", "/notebooks/**", "/assets/**", "/.pre-commit-config.yaml",
+    "/.github/**", "/documentation/**", "/assets/**", "/.pre-commit-config.yaml",
     "/external/README.md",
     "/external/agent-harmony/include/**",
     "/external/agent-harmony/src/**",

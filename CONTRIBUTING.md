@@ -95,7 +95,7 @@ with controlled fakes; they never upload anything.
 | `tests/contracts/` | Installed-package and repository infrastructure tests |
 | `documentation/` | MkDocs sources, API templates, and release notes |
 | `docs/` | Generated documentation, ignored by Git |
-| `examples/`, `notebooks/` | Maintained Python and notebook examples |
+| `examples/` | Maintained Python scripts and notebook examples |
 | `assets/` | Project assets |
 | `scripts/` | Build verification, validation, and release helpers |
 | `.github/workflows/` | CI, CD, docs, notebooks, releases, and maintenance |
@@ -118,8 +118,8 @@ The existing documentation layout is retained. `make docs` builds
 Mkdocstrings is ready for future implemented APIs. Keep its compatible
 `pymdown-extensions<12` dependency constraint.
 
-`make notebooks-check` validates JSON/schema, saved execution counts, stored
-errors, and version output without executing notebook cells. The basic notebook
+`make notebooks-check` validates notebooks in `examples/`: JSON/schema, saved
+execution counts, stored errors, and version output without executing cells. The basic notebook
 contains only an import and version print. Update its saved version after a
 version change. Installation cells must remain unexecuted.
 
