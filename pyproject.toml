@@ -14,7 +14,7 @@ authors = [
     {name = "Michal Szczygiel"},
     {name = "Antoni Zieciak"},
 ]
-keywords = ["agents", "simulation", "agent-based-modeling", "cpp", "nanobind"]
+keywords = ["abm", "agent-based-modeling", "multi-agent-systems", "simulation", "modeling"]
 classifiers = [
     "Development Status :: 1 - Planning",
     "Intended Audience :: Developers",
