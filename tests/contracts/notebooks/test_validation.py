@@ -12,6 +12,8 @@ import nbformat
 import pytest
 from nbformat.v4 import new_code_cell, new_notebook, new_output
 
+from tests._shell import bash_executable
+
 PROJECT_ROOT = Path(__file__).parents[3]
 VALIDATOR = PROJECT_ROOT / "scripts" / "validate_notebooks.sh"
 VERSION = version("agent-harmony")
@@ -63,7 +65,12 @@ def validate(
     project: Path, notebook_path: Path | None = None
 ) -> subprocess.CompletedProcess[str]:
     """Run the validator against an explicit path or the default examples folder."""
-    command = ["bash", VALIDATOR.as_posix(), "--project-root", project.as_posix()]
+    command = [
+        bash_executable(),
+        VALIDATOR.as_posix(),
+        "--project-root",
+        project.as_posix(),
+    ]
     if notebook_path is not None:
         command.append(notebook_path.as_posix())
     return subprocess.run(

@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pytest
 
+from tests._shell import bash_executable
+
 ROOT = Path(__file__).parents[3]
 VALIDATOR = ROOT / "scripts" / "validate_version.sh"
 
@@ -57,7 +59,7 @@ def validate(project: Path, *args: str) -> subprocess.CompletedProcess[str]:
         "PATH": f"{project / 'bin'}{os.pathsep}{os.environ['PATH']}",
     }
     return subprocess.run(
-        ["bash", VALIDATOR.as_posix(), *args],
+        [bash_executable(), VALIDATOR.as_posix(), *args],
         cwd=project,
         env=environment,
         capture_output=True,

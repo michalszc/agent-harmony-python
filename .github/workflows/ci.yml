@@ -129,6 +129,13 @@ jobs:
           choco install make jq --yes --no-progress
           Add-Content -LiteralPath $env:GITHUB_PATH -Value "$env:ProgramFiles\Git\bin"
           Add-Content -LiteralPath $env:GITHUB_PATH -Value "$env:ProgramFiles\Git\usr\bin"
+      - name: Verify Bash resolution on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: >-
+          python -c "from tests._shell import bash_executable; import subprocess;
+          bash = bash_executable(); print('Bash:', bash, flush=True);
+          subprocess.run([bash, '--version'], check=True)"
       - name: Install wheel build dependencies
         run: make install-tools GROUP=build
       - name: Build and test platform wheels
