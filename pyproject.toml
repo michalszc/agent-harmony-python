@@ -10,7 +10,10 @@ readme = "README.md"
 requires-python = ">=3.12"
 license = "Apache-2.0 AND MIT AND BSD-3-Clause"
 license-files = ["LICENSE", "LICENSE-UPSTREAM", "LICENSE-NANOBIND", "NOTICE"]
-authors = [{name = "Michal Szczygiel"}]
+authors = [
+    {name = "Michal Szczygiel"},
+    {name = "Antoni Zieciak"},
+]
 keywords = ["agents", "simulation", "agent-based-modeling", "cpp", "nanobind"]
 classifiers = [
     "Development Status :: 1 - Planning",

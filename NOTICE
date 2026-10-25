@@ -1,8 +1,8 @@
 Agent-Harmony Python bindings
 
-Copyright 2026 Michal Szczygiel.
+Copyright 2026 Michal Szczygiel and Antoni Zieciak.
 
-Includes Agent-Harmony by Tosiekdev, licensed under the MIT License.
+Includes Agent-Harmony by Antoni Zieciak, licensed under the MIT License.
 See LICENSE-UPSTREAM for the original copyright and license notice.
 
 The native extension incorporates nanobind, licensed under the BSD 3-Clause
