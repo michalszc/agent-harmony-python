@@ -218,3 +218,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Native builds and CI artifacts
+/wheelhouse/
+/release-metadata.json
+/*_output.txt
+/CMakeUserPresets.json
