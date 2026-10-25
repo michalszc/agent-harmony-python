@@ -28,17 +28,21 @@ def project(tmp_path: Path) -> Path:
     binary = tmp_path / "bin"
     binary.mkdir()
     python = binary / "python"
-    python.write_text(f'#!/bin/sh\nexec "{sys.executable}" -S "$@"\n')
+    python.write_text(f'#!/bin/sh\nexec "{Path(sys.executable).as_posix()}" -S "$@"\n')
     python.chmod(0o755)
-    curl = binary / "curl"
-    curl.write_text(
-        f"#!{sys.executable}\n"
+    curl_source = binary / "curl.py"
+    curl_source.write_text(
         "import os, sys\nfrom pathlib import Path\n"
         "Path('curl-called').touch()\n"
         "if os.environ.get('PYPI_STATUS') == 'network': sys.exit(7)\n"
         "Path(sys.argv[sys.argv.index('--output') + 1]).write_text(\n"
         '    os.environ.get(\'PYPI_BODY\', \'{"info": {"version": "0.0.1"}}\'))\n'
         "print(os.environ.get('PYPI_STATUS', '200'), end='')\n",
+    )
+    curl = binary / "curl"
+    curl.write_text(
+        f'#!/bin/sh\nexec "{Path(sys.executable).as_posix()}" -S '
+        f'"{curl_source.as_posix()}" "$@"\n'
     )
     curl.chmod(0o755)
     return tmp_path
@@ -48,12 +52,12 @@ def validate(project: Path, *args: str) -> subprocess.CompletedProcess[str]:
     """Invoke the shell entry point without any real network access."""
     environment = {
         **os.environ,
-        "PYTHON": str(project / "bin" / "python"),
+        "PYTHON": (project / "bin" / "python").as_posix(),
         "PYTHONPATH": str(project / "src"),
-        "PATH": f"{project / 'bin'}:{os.environ['PATH']}",
+        "PATH": f"{project / 'bin'}{os.pathsep}{os.environ['PATH']}",
     }
     return subprocess.run(
-        ["bash", str(VALIDATOR), *args],
+        ["bash", VALIDATOR.as_posix(), *args],
         cwd=project,
         env=environment,
         capture_output=True,

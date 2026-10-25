@@ -62,7 +62,13 @@ def write_notebook(path: Path, value: nbformat.NotebookNode) -> None:
 def validate(project: Path, notebook_path: Path) -> subprocess.CompletedProcess[str]:
     """Run the Bash validator against one fixture notebook."""
     return subprocess.run(
-        ["bash", str(VALIDATOR), "--project-root", str(project), str(notebook_path)],
+        [
+            "bash",
+            VALIDATOR.as_posix(),
+            "--project-root",
+            project.as_posix(),
+            notebook_path.as_posix(),
+        ],
         check=False,
         capture_output=True,
         text=True,

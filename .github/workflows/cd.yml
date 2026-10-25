@@ -61,7 +61,7 @@ jobs:
         path: dist
 
     - name: Check build
-      run: make check-build CHECK_BUILD_ARGS='--require-wheels 12'
+      run: make check-build CHECK_BUILD_ARGS='--require-wheels 15'
 
     - name: Install tested wheel
       run: make install-wheel

@@ -89,7 +89,7 @@ def test_cd_records_identity_before_publishing(tmp_path: Path) -> None:
         "if-no-files-found": "error",
     }
     assert not any(step.get("run") == "make build" for step in steps)
-    assert "--require-wheels 12" in steps[names.index("Check build")]["run"]
+    assert "--require-wheels 15" in steps[names.index("Check build")]["run"]
     for name in ("Download tested wheels", "Download tested source archive"):
         download = steps[names.index(name)]["with"]
         assert download["run-id"] == "${{ github.event.workflow_run.id }}"
@@ -98,11 +98,31 @@ def test_cd_records_identity_before_publishing(tmp_path: Path) -> None:
     (tmp_path / "pyproject.toml").write_text(
         '[project]\nname = "agent_harmony"\nversion = "0.1.0"\n',
     )
-    binary = tmp_path / "bin"
-    binary.mkdir()
-    git = binary / "git"
-    git.write_text(f"#!/bin/sh\nprintf '%s\\n' '{SHA}'\n")
-    git.chmod(0o755)
+    subprocess.run(["git", "init", str(tmp_path)], check=True, capture_output=True)
+    subprocess.run(
+        [
+            "git",
+            "-C",
+            str(tmp_path),
+            "-c",
+            "user.name=Fixture",
+            "-c",
+            "user.email=fixture@example.invalid",
+            "-c",
+            "commit.gpgsign=false",
+            "-c",
+            f"core.hooksPath={tmp_path / 'no-hooks'}",
+            "commit",
+            "--allow-empty",
+            "-m",
+            "fixture",
+        ],
+        check=True,
+        capture_output=True,
+    )
+    sha = subprocess.check_output(
+        ["git", "-C", str(tmp_path), "rev-parse", "HEAD"], text=True
+    ).strip()
     assert steps[record]["run"] == "make release-metadata"
     assert (
         steps[record]["env"]["DEPLOYED_SHA"]
@@ -112,10 +132,9 @@ def test_cd_records_identity_before_publishing(tmp_path: Path) -> None:
     scripts = tmp_path / "scripts"
     scripts.mkdir()
     (scripts / "release.py").write_text((ROOT / "scripts" / "release.py").read_text())
-    environment = {**os.environ, "DEPLOYED_SHA": SHA}
-    environment["PATH"] = f"{binary}:{ROOT / '.venv' / 'bin'}:{environment['PATH']}"
+    environment = {**os.environ, "DEPLOYED_SHA": sha}
     result = subprocess.run(
-        ["make", "release-metadata", f"PYTHON={sys.executable}"],
+        ["make", "release-metadata", f"PYTHON={Path(sys.executable).as_posix()}"],
         cwd=tmp_path,
         env=environment,
         capture_output=True,
@@ -124,13 +143,13 @@ def test_cd_records_identity_before_publishing(tmp_path: Path) -> None:
     )
     assert result.returncode == 0, result.stderr
     assert json.loads((tmp_path / "release-metadata.json").read_text()) == {
-        "sha": SHA,
+        "sha": sha,
         "name": "agent_harmony",
         "version": "0.1.0",
     }
     environment["DEPLOYED_SHA"] = "b" * 40
     result = subprocess.run(
-        ["make", "release-metadata", f"PYTHON={sys.executable}"],
+        ["make", "release-metadata", f"PYTHON={Path(sys.executable).as_posix()}"],
         cwd=tmp_path,
         env=environment,
         capture_output=True,
@@ -146,7 +165,7 @@ def test_cd_records_identity_before_publishing(tmp_path: Path) -> None:
         [
             "make",
             "release-metadata",
-            f"PYTHON={sys.executable}",
+            f"PYTHON={Path(sys.executable).as_posix()}",
             "RELEASE_METADATA=local.json",
         ],
         cwd=tmp_path,
@@ -156,7 +175,7 @@ def test_cd_records_identity_before_publishing(tmp_path: Path) -> None:
         check=False,
     )
     assert result.returncode == 0, result.stderr
-    assert json.loads((tmp_path / "local.json").read_text())["sha"] == SHA
+    assert json.loads((tmp_path / "local.json").read_text())["sha"] == sha
 
 
 @pytest.mark.parametrize(
@@ -240,7 +259,7 @@ def test_ci_checks_release_automation_changes() -> None:
             "scripts/release.py",
         } <= set(ci["on"][event]["paths"])
     checks = ci["jobs"]["quality-checks"]["strategy"]["matrix"]["check"]
-    assert {"lint", "format-check", "type-check", "test"} <= set(checks)
+    assert {"lint", "format-check", "type-check"} <= set(checks)
     makefile = (ROOT / "Makefile").read_text()
     assert "ruff check src/ tests/ scripts/" in makefile
     assert "ruff format --diff src/ tests/ scripts/" in makefile
@@ -255,13 +274,13 @@ def test_ci_combines_compatibility_with_wheel_builds() -> None:
         "lint",
         "format-check",
         "type-check",
-        "test",
         "validate-version",
     ]
     with (ROOT / "pyproject.toml").open("rb") as stream:
         wheels = tomllib.load(stream)["tool"]["cibuildwheel"]
     assert wheels["build"] == ["cp312-*", "cp313-*", "cp314-*"]
-    assert "tests/contracts/package/test_package.py" in wheels["test-command"]
+    assert wheels["test-command"] == 'make -C "{project}" test PYTHON=python'
+    assert wheels["test-groups"] == ["test"]
 
 
 @pytest.mark.parametrize("event", ["push", "pull_request"])
@@ -296,9 +315,10 @@ def test_native_jobs_test_installed_wheels_and_archive() -> None:
     wheels = ci["jobs"]["wheels"]
     assert wheels["strategy"]["matrix"]["os"] == [
         "ubuntu-latest",
-        "macos-15-intel",
-        "macos-15",
+        "macos-26-intel",
+        "macos-latest",
         "windows-latest",
+        "windows-11-arm",
     ]
     assert any(step.get("run") == "make wheels" for step in wheels["steps"])
     source = ci["jobs"]["source-distribution"]
@@ -356,7 +376,7 @@ def test_development_install_can_skip_hooks(install_hooks: str) -> None:
             "--dry-run",
             "install-dev",
             f"INSTALL_HOOKS={install_hooks}",
-            f"PYTHON={sys.executable}",
+            f"PYTHON={Path(sys.executable).as_posix()}",
         ],
         cwd=ROOT,
         capture_output=True,
@@ -395,7 +415,7 @@ def test_make_ci_check_runs_locally_and_preserves_failure(
     make = binary / "make"
     make.write_text(f"#!/bin/sh\necho fixture-check-output\nexit {exit_code}\n")
     make.chmod(0o755)
-    environment = {**os.environ, "PATH": f"{binary}:{os.environ['PATH']}"}
+    environment = {**os.environ, "PATH": f"{binary}{os.pathsep}{os.environ['PATH']}"}
     environment.pop("GITHUB_STEP_SUMMARY", None)
     result = subprocess.run(
         [real_make, "ci-check", "CHECK=lint"],
@@ -437,11 +457,11 @@ def test_make_ci_publish_reports_mocked_upload(tmp_path: Path, exit_code: int) -
     make.chmod(0o755)
     summary = tmp_path / "summary.md"
     result = subprocess.run(
-        [real_make, "ci-publish", f"PYTHON={sys.executable}"],
+        [real_make, "ci-publish", f"PYTHON={Path(sys.executable).as_posix()}"],
         cwd=tmp_path,
         env={
             **os.environ,
-            "PATH": f"{binary}:{os.environ['PATH']}",
+            "PATH": f"{binary}{os.pathsep}{os.environ['PATH']}",
             "GITHUB_STEP_SUMMARY": str(summary),
         },
         capture_output=True,
