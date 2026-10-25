@@ -1,6 +1,6 @@
 # Release notes
 
-## 0.0.0 — Unreleased
+## 0.0.0 — 2026-10-25
 
 - Established `agent-harmony` packaging and the typed `agent_harmony` import.
 - Added a metadata-only nanobind extension, CMake/scikit-build-core build, and a
