@@ -1,1 +1,1 @@
-"""Tabloom tests."""
+"""Agent-Harmony Python tests."""
