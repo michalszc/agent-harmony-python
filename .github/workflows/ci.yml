@@ -1,0 +1,147 @@
+name: CI
+
+on:
+  push:
+    branches:
+        - master
+    paths:
+      - "CMakeLists.txt"
+      - "cpp/**"
+      - "external/**"
+      - ".gitmodules"
+      - ".pre-commit-config.yaml"
+      - "scripts/check*.py"
+      - "scripts/clean.py"
+      - "scripts/validate_version.sh"
+      - "src/**"
+      - "tests/**"
+      - "pyproject.toml"
+      - "Makefile"
+      - "scripts/ci/**"
+      - ".github/workflows/ci.yml"
+      - ".github/workflows/cd.yml"
+      - ".github/workflows/release.yml"
+      - "scripts/release.py"
+      - "!**/*.md"
+  pull_request:
+    branches:
+        - master
+    paths:
+      - "CMakeLists.txt"
+      - "cpp/**"
+      - "external/**"
+      - ".gitmodules"
+      - ".pre-commit-config.yaml"
+      - "scripts/check*.py"
+      - "scripts/clean.py"
+      - "scripts/validate_version.sh"
+      - "src/**"
+      - "tests/**"
+      - "pyproject.toml"
+      - "Makefile"
+      - "scripts/ci/**"
+      - ".github/workflows/ci.yml"
+      - ".github/workflows/cd.yml"
+      - ".github/workflows/release.yml"
+      - "scripts/release.py"
+      - "!**/*.md"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality-checks:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        check: [lint, format-check, type-check, test, validate-version]
+
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        submodules: true
+        persist-credentials: false
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+        cache-dependency-path: 'pyproject.toml'
+
+    - name: Install dependencies
+      run: make install-dev INSTALL_HOOKS=0
+
+    - name: Run ${{ matrix.check }}
+      if: matrix.check != 'validate-version' || github.event_name == 'pull_request'
+      run: make ci-check CHECK="${{ matrix.check }}"
+
+  source-distribution:
+    name: Source distribution and clean installation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: true
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install build dependencies
+        run: make install-tools
+      - name: Build source archive and wheel
+        run: make build
+      - name: Validate distributions
+        run: make check-build
+      - name: Test clean installation and offline source build
+        run: make check-install
+      - uses: actions/upload-artifact@v7
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+          if-no-files-found: error
+
+  wheels:
+    name: Python 3.12–3.14 tests and wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-26-intel, macos-latest, windows-latest, windows-11-arm]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: true
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          architecture: ${{ (matrix.os == 'windows-11-arm' || matrix.os == 'macos-latest') && 'arm64' || 'x64' }}
+      - name: Ensure test tools on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install make jq --yes --no-progress
+          Add-Content -LiteralPath $env:GITHUB_PATH -Value "$env:ProgramFiles\Git\bin"
+          Add-Content -LiteralPath $env:GITHUB_PATH -Value "$env:ProgramFiles\Git\usr\bin"
+      - name: Verify Bash resolution on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: >-
+          python -c "from tests._shell import bash_executable; import subprocess;
+          bash = bash_executable(); print('Bash:', bash, flush=True);
+          subprocess.run([bash, '--version'], check=True)"
+      - name: Install wheel build dependencies
+        run: make install-tools GROUP=build
+      - name: Build and test platform wheels
+        run: make wheels
+      - uses: actions/upload-artifact@v7
+        with:
+          name: wheels-${{ matrix.os }}
+          path: wheelhouse/*.whl
+          if-no-files-found: error

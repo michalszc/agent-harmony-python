@@ -218,3 +218,13 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Native builds and CI artifacts
+/wheelhouse/
+/release-metadata.json
+/*_output.txt
+/CMakeUserPresets.json
+
+# Generated MkDocs site; sources remain in documentation/.
+/docs/
+*.pyd

@@ -1,0 +1,117 @@
+[build-system]
+requires = ["scikit-build-core>=1.1", "nanobind>=2.9"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "agent-harmony"
+version = "0.0.0"
+description = "Python bindings for the Agent-Harmony C++20 agent-based modeling library."
+readme = "README.md"
+requires-python = ">=3.12"
+license = "Apache-2.0 AND MIT AND BSD-3-Clause"
+license-files = ["LICENSE", "LICENSE-UPSTREAM", "LICENSE-NANOBIND", "NOTICE"]
+authors = [
+    {name = "Michal Szczygiel"},
+    {name = "Antoni Zieciak"},
+]
+keywords = ["abm", "agent-based-modeling", "multi-agent-systems", "simulation", "modeling"]
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: C++",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/michalszc/agent-harmony-python"
+Repository = "https://github.com/michalszc/agent-harmony-python"
+Documentation = "https://michalszc.github.io/agent-harmony-python/"
+Issues = "https://github.com/michalszc/agent-harmony-python/issues"
+Upstream = "https://github.com/Tosiekdev/Agent-Harmony"
+
+[dependency-groups]
+test = ["pytest>=8", "PyYAML>=6", "nbformat>=5.10,<6"]
+lint = ["ruff==0.14.6", "mypy>=1.10", "pre-commit>=3"]
+build = ["build>=1.2", "twine>=6", "cibuildwheel==4.3.4"]
+native = ["scikit-build-core>=1.1", "nanobind>=2.9", "ninja>=1.11"]
+docs = [
+    "mkdocs>=1.6,<2", "mkdocs-material>=9.6,<10",
+    "mkdocstrings[python]>=0.29,<1", "pymdown-extensions>=10,<12",
+    "nbformat>=5.10,<6",
+]
+dev = [
+    {include-group = "test"},
+    {include-group = "lint"},
+    {include-group = "build"},
+    {include-group = "native"},
+    {include-group = "docs"},
+]
+
+[tool.scikit-build]
+minimum-version = "build-system.requires"
+build-dir = "build/{wheel_tag}"
+wheel.packages = ["src/agent_harmony"]
+sdist.cmake = true
+sdist.inclusion-mode = "explicit"
+# Patterns use gitignore semantics: anchor entries to avoid matching files in .venv.
+sdist.include = [
+    "/pyproject.toml", "/CMakeLists.txt", "/Makefile", "/README.md",
+    "/CONTRIBUTING.md", "/LICENSE*", "/NOTICE", "/mkdocs.yml", "/.gitmodules",
+    "/src/**", "/cpp/**", "/scripts/**", "/tests/**", "/examples/**",
+    "/.github/**", "/documentation/**", "/assets/**", "/.pre-commit-config.yaml",
+    "/external/README.md",
+    "/external/agent-harmony/include/**",
+    "/external/agent-harmony/src/**",
+    "/external/agent-harmony/CMakeLists.txt",
+    "/external/agent-harmony/LICENSE",
+]
+sdist.exclude = [
+    "/.venv/**", "/build/**", "/dist/**", "/site/**", "/docs/**", "/wheelhouse/**",
+    "**/__pycache__/**", "**/*.pyc", "**/.git", "**/.git/**",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+extend-exclude = ["external"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unreachable = true
+untyped_calls_exclude = ["nbformat"]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "-ra -q --strict-markers --strict-config"
+testpaths = ["tests"]
+
+[tool.cibuildwheel]
+build = ["cp312-*", "cp313-*", "cp314-*"]
+skip = ["*-musllinux_*", "*-manylinux_i686", "*-win32"]
+test-groups = ["test"]
+test-command = 'make -C "{project}" test PYTHON=python'
+test-environment = { PYTHONUTF8 = "1", PYTHONIOENCODING = "utf-8" }
+build-verbosity = 1
+
+[tool.cibuildwheel.linux]
+archs = ["x86_64"]
+manylinux-x86_64-image = "manylinux_2_28"
+before-all = "dnf install -y jq make git"
+
+[tool.cibuildwheel.macos]
+archs = ["native"]
+environment = { MACOSX_DEPLOYMENT_TARGET = "11.0" }
+
+[tool.cibuildwheel.windows]
+archs = ["native"]
