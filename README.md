@@ -88,5 +88,6 @@ combination, in addition to the main quality checks.
 
 The Python bindings and repository code are licensed under [Apache 2.0](LICENSE).
 Agent-Harmony retains its upstream [MIT license](LICENSE-UPSTREAM). The compiled
-extension incorporates nanobind under its [BSD 3-Clause license](LICENSE-NANOBIND).
+extension incorporates nanobind under the BSD 3-Clause license and its bundled
+MIT-licensed robin-map; both notices appear in [LICENSE-NANOBIND](LICENSE-NANOBIND).
 All notices are included in wheels and source distributions; see [NOTICE](NOTICE).

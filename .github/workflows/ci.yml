@@ -9,6 +9,7 @@ on:
       - "cpp/**"
       - "external/**"
       - ".gitmodules"
+      - ".pre-commit-config.yaml"
       - "scripts/check*.py"
       - "scripts/clean.py"
       - "scripts/validate_version.sh"
@@ -30,6 +31,7 @@ on:
       - "cpp/**"
       - "external/**"
       - ".gitmodules"
+      - ".pre-commit-config.yaml"
       - "scripts/check*.py"
       - "scripts/clean.py"
       - "scripts/validate_version.sh"
@@ -123,7 +125,10 @@ jobs:
       - name: Ensure test tools on Windows
         if: runner.os == 'Windows'
         shell: pwsh
-        run: choco install make jq --yes --no-progress
+        run: |
+          choco install make jq --yes --no-progress
+          Add-Content -LiteralPath $env:GITHUB_PATH -Value "$env:ProgramFiles\Git\bin"
+          Add-Content -LiteralPath $env:GITHUB_PATH -Value "$env:ProgramFiles\Git\usr\bin"
       - name: Install wheel build dependencies
         run: make install-tools GROUP=build
       - name: Build and test platform wheels

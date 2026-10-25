@@ -1,4 +1,11 @@
 cmake_minimum_required(VERSION 3.29...4.4)
+if(NOT SKBUILD)
+  message(FATAL_ERROR "Build with pip install . or make build (scikit-build-core).")
+endif()
+if(CMAKE_HOST_APPLE AND NOT DEFINED CMAKE_OSX_DEPLOYMENT_TARGET
+    AND NOT DEFINED ENV{MACOSX_DEPLOYMENT_TARGET})
+  set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum supported macOS")
+endif()
 project(agent_harmony VERSION "${SKBUILD_PROJECT_VERSION}" LANGUAGES CXX)
 
 find_package(Python 3.12 REQUIRED COMPONENTS Interpreter Development.Module)

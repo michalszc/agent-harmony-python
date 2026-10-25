@@ -14,6 +14,7 @@ GROUP ?= dev
 INSTALL_HOOKS ?= 1
 WHEEL_ARGS ?=
 export PYTHON VALIDATE_VERSION_ARGS
+export NO_MKDOCS_2_WARNING := 1
 
 help: ## Show available commands
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "%-24s %s\n", $$1, $$2}' $(MAKEFILE_LIST)

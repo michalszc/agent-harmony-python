@@ -6,4 +6,5 @@ Includes Agent-Harmony by Tosiekdev, licensed under the MIT License.
 See LICENSE-UPSTREAM for the original copyright and license notice.
 
 The native extension incorporates nanobind, licensed under the BSD 3-Clause
-License. See LICENSE-NANOBIND for its copyright and license notice.
+License. Its bundled tsl::robin_map is licensed under the MIT License.
+See LICENSE-NANOBIND for both copyright and license notices.
