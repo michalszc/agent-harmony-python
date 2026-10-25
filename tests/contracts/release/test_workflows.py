@@ -259,7 +259,7 @@ def test_ci_checks_release_automation_changes() -> None:
             "scripts/release.py",
         } <= set(ci["on"][event]["paths"])
     checks = ci["jobs"]["quality-checks"]["strategy"]["matrix"]["check"]
-    assert {"lint", "format-check", "type-check"} <= set(checks)
+    assert {"lint", "format-check", "type-check", "test"} <= set(checks)
     makefile = (ROOT / "Makefile").read_text()
     assert "ruff check src/ tests/ scripts/" in makefile
     assert "ruff format --diff src/ tests/ scripts/" in makefile
@@ -274,6 +274,7 @@ def test_ci_combines_compatibility_with_wheel_builds() -> None:
         "lint",
         "format-check",
         "type-check",
+        "test",
         "validate-version",
     ]
     with (ROOT / "pyproject.toml").open("rb") as stream:
