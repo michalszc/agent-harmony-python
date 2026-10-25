@@ -1,4 +1,4 @@
-.PHONY: help install install-dev submodules check ci-check test test-verbose lint lint-fix format format-check type-check build check-build check-install wheels publish-test publish ci-publish validate-version release-metadata release-select-commit release docs docs-serve examples-check clean
+.PHONY: help install install-tools install-dev install-wheel submodules check ci-check test test-verbose lint lint-fix format format-check type-check build check-build check-install wheels publish-test publish ci-publish validate-version release-metadata release-select-commit release docs docs-serve examples-check notebooks-check hooks-check clean
 .DEFAULT_GOAL := help
 
 # Prefer the existing environment; CI and callers may override explicitly.
@@ -10,6 +10,9 @@ VALIDATE_VERSION_ARGS ?= --offline
 TWINE_UPLOAD_ARGS ?=
 CHECK ?= test
 CHECK_BUILD_ARGS ?=
+GROUP ?= dev
+INSTALL_HOOKS ?= 1
+WHEEL_ARGS ?=
 export PYTHON VALIDATE_VERSION_ARGS
 
 help: ## Show available commands
@@ -21,11 +24,20 @@ submodules: ## Initialize the pinned upstream dependency (without SFML)
 install: ## Install an editable native build
 	$(PYTHON) -m pip install -e . $(INSTALL_ARGS)
 
-install-dev: ## Install editable package and development dependency groups
-	$(PYTHON) -m pip install --group dev
-	$(PYTHON) -m pip install --no-build-isolation -e . $(INSTALL_ARGS)
+install-tools: ## Install tools only (override GROUP, defaults to dev)
+	$(PYTHON) -m pip install 'pip>=25.1'
+	$(PYTHON) -m pip install --group $(GROUP)
 
-check: lint format-check type-check test validate-version docs examples-check ## Run local quality checks without publishing
+install-dev: install-tools ## Install editable package and development dependency groups
+	$(PYTHON) -m pip install --no-build-isolation -e . $(INSTALL_ARGS)
+ifeq ($(INSTALL_HOOKS),1)
+	$(PYTHON) -m pre_commit install
+endif
+
+install-wheel: ## Install a compatible wheel from dist without compiling
+	$(PYTHON) -m pip install --no-index --no-deps --only-binary=:all: --find-links dist agent-harmony
+
+check: lint format-check type-check test validate-version docs examples-check notebooks-check hooks-check ## Run local quality checks without publishing
 
 ci-check: ## Run a check with a CI summary
 	@bash scripts/ci/run_check.sh "$(CHECK)"
@@ -46,7 +58,7 @@ format: ## Format Python code
 	$(PYTHON) -m ruff format src/ tests/ scripts/ examples/
 
 format-check: ## Check Python formatting
-	$(PYTHON) -m ruff format --check src/ tests/ scripts/ examples/
+	$(PYTHON) -m ruff format --diff src/ tests/ scripts/ examples/
 
 type-check: ## Run strict Python type checks
 	$(PYTHON) -m mypy src/agent_harmony/ tests/ scripts/ examples/
@@ -62,7 +74,7 @@ check-install: ## Verify wheel installation and offline sdist rebuilding
 	$(PYTHON) scripts/check_install.py
 
 wheels: ## Build and test platform wheels with cibuildwheel
-	$(PYTHON) -m cibuildwheel --output-dir wheelhouse
+	$(PYTHON) -m cibuildwheel --output-dir wheelhouse $(WHEEL_ARGS)
 
 publish-test: ## Upload distributions to TestPyPI (publishing operation)
 	$(PYTHON) -m twine upload --repository testpypi $(TWINE_UPLOAD_ARGS) dist/*
@@ -93,6 +105,12 @@ docs-serve: ## Preview documentation locally
 
 examples-check: ## Run the minimal package example
 	$(PYTHON) examples/basic_usage.py
+
+notebooks-check: ## Validate saved notebook structure and outputs without executing cells
+	@bash scripts/validate_notebooks.sh
+
+hooks-check: ## Validate the pre-commit configuration without installing hooks
+	$(PYTHON) -m pre_commit validate-config
 
 clean: ## Remove generated artifacts while preserving sources and .venv
 	$(PYTHON) scripts/clean.py

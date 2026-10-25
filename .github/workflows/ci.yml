@@ -5,6 +5,13 @@ on:
     branches:
         - master
     paths:
+      - "CMakeLists.txt"
+      - "cpp/**"
+      - "external/**"
+      - ".gitmodules"
+      - "scripts/check*.py"
+      - "scripts/clean.py"
+      - "scripts/validate_version.sh"
       - "src/**"
       - "tests/**"
       - "pyproject.toml"
@@ -14,11 +21,18 @@ on:
       - ".github/workflows/cd.yml"
       - ".github/workflows/release.yml"
       - "scripts/release.py"
-      - "documentation/release-notes.md"
+      - "!**/*.md"
   pull_request:
     branches:
         - master
     paths:
+      - "CMakeLists.txt"
+      - "cpp/**"
+      - "external/**"
+      - ".gitmodules"
+      - "scripts/check*.py"
+      - "scripts/clean.py"
+      - "scripts/validate_version.sh"
       - "src/**"
       - "tests/**"
       - "pyproject.toml"
@@ -28,7 +42,7 @@ on:
       - ".github/workflows/cd.yml"
       - ".github/workflows/release.yml"
       - "scripts/release.py"
-      - "documentation/release-notes.md"
+      - "!**/*.md"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -44,6 +58,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v7
+      with:
+        submodules: true
+        persist-credentials: false
 
     - name: Set up Python 3.12
       uses: actions/setup-python@v6
@@ -59,21 +76,59 @@ jobs:
       if: matrix.check != 'validate-version' || github.event_name == 'pull_request'
       run: make ci-check CHECK="${{ matrix.check }}"
 
-  python-compatibility:
-    name: Python ${{ matrix.python-version }} compatibility
+  source-distribution:
+    name: Source distribution and clean installation
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: true
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install build dependencies
+        run: make install-tools
+      - name: Build source archive and wheel
+        run: make build
+      - name: Validate distributions
+        run: make check-build
+      - name: Test clean installation and offline source build
+        run: make check-install
+      - uses: actions/upload-artifact@v7
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+          if-no-files-found: error
+
+  wheels:
+    name: Python 3.12–3.14 wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.13", "3.14"]
+        os: [ubuntu-latest, macos-15-intel, macos-15, windows-latest]
     steps:
       - uses: actions/checkout@v7
+        with:
+          submodules: true
+          persist-credentials: false
       - uses: actions/setup-python@v6
         with:
-          python-version: ${{ matrix.python-version }}
-          cache: pip
-          cache-dependency-path: pyproject.toml
-      - name: Install dependencies
-        run: make install-dev INSTALL_HOOKS=0
-      - name: Check Python compatibility
-        run: make ci-check CHECK=test
+          python-version: "3.12"
+      - name: Ensure GNU Make on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: choco install make --yes --no-progress
+      - name: Install wheel build dependencies
+        run: make install-tools GROUP=build
+      - name: Build and test platform wheels
+        run: make wheels
+      - uses: actions/upload-artifact@v7
+        with:
+          name: wheels-${{ matrix.os }}
+          path: wheelhouse/*.whl
+          if-no-files-found: error

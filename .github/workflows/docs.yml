@@ -32,6 +32,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          submodules: true
+          persist-credentials: false
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v6

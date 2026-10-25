@@ -8,6 +8,14 @@ on:
     types:
       - completed
 
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: pypi-publish
+  cancel-in-progress: false
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -31,13 +39,35 @@ jobs:
         cache-dependency-path: 'pyproject.toml'
 
     - name: Install dependencies
-      run: make install INSTALL_ARGS='--group build'
+      run: make install-tools GROUP=build
 
-    - name: Build package
-      run: make build
+    - name: Download tested wheels
+      uses: actions/download-artifact@v8
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        repository: ${{ github.repository }}
+        run-id: ${{ github.event.workflow_run.id }}
+        pattern: wheels-*
+        merge-multiple: true
+        path: dist
+
+    - name: Download tested source archive
+      uses: actions/download-artifact@v8
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        repository: ${{ github.repository }}
+        run-id: ${{ github.event.workflow_run.id }}
+        name: sdist
+        path: dist
 
     - name: Check build
-      run: make check-build
+      run: make check-build CHECK_BUILD_ARGS='--require-wheels 12'
+
+    - name: Install tested wheel
+      run: make install-wheel
+
+    - name: Validate version before publication
+      run: make validate-version VALIDATE_VERSION_ARGS=
 
     - name: Record deployment identity
       env:

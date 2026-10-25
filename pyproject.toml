@@ -35,10 +35,14 @@ Upstream = "https://github.com/Tosiekdev/Agent-Harmony"
 
 [dependency-groups]
 test = ["pytest>=8", "PyYAML>=6"]
-lint = ["ruff==0.14.6", "mypy>=1.10"]
-build = ["build>=1.2", "twine>=6", "cibuildwheel>=3.2"]
+lint = ["ruff==0.14.6", "mypy>=1.10", "pre-commit>=3"]
+build = ["build>=1.2", "twine>=6", "cibuildwheel==4.3.4"]
 native = ["scikit-build-core>=1.1", "nanobind>=2.9", "ninja>=1.11"]
-docs = ["mkdocs>=1.6,<2", "mkdocs-material>=9.6,<10"]
+docs = [
+    "mkdocs>=1.6,<2", "mkdocs-material>=9.6,<10",
+    "mkdocstrings[python]>=0.29,<1", "pymdown-extensions>=10,<12",
+    "nbformat>=5.10,<6",
+]
 dev = [
     {include-group = "test"},
     {include-group = "lint"},
@@ -57,7 +61,8 @@ sdist.inclusion-mode = "explicit"
 sdist.include = [
     "/pyproject.toml", "/CMakeLists.txt", "/Makefile", "/README.md",
     "/CONTRIBUTING.md", "/LICENSE*", "/NOTICE", "/mkdocs.yml", "/.gitmodules",
-    "/src/**", "/cpp/**", "/scripts/**", "/tests/**", "/docs/**", "/examples/**",
+    "/src/**", "/cpp/**", "/scripts/**", "/tests/**", "/examples/**",
+    "/.github/**", "/documentation/**", "/notebooks/**", "/assets/**", "/.pre-commit-config.yaml",
     "/external/README.md",
     "/external/agent-harmony/include/**",
     "/external/agent-harmony/src/**",
@@ -65,7 +70,7 @@ sdist.include = [
     "/external/agent-harmony/LICENSE",
 ]
 sdist.exclude = [
-    "/.venv/**", "/build/**", "/dist/**", "/site/**", "/wheelhouse/**",
+    "/.venv/**", "/build/**", "/dist/**", "/site/**", "/docs/**", "/wheelhouse/**",
     "**/__pycache__/**", "**/*.pyc", "**/.git", "**/.git/**",
 ]
 
@@ -81,8 +86,27 @@ select = ["E4", "E7", "E9", "F", "I", "UP", "B", "SIM", "RUF"]
 python_version = "3.12"
 strict = true
 warn_unreachable = true
+untyped_calls_exclude = ["nbformat"]
 
 [tool.pytest.ini_options]
 minversion = "8.0"
 addopts = "-ra -q --strict-markers --strict-config"
 testpaths = ["tests"]
+
+[tool.cibuildwheel]
+build = ["cp312-*", "cp313-*", "cp314-*"]
+skip = ["*-musllinux_*", "*-manylinux_i686", "*-win32"]
+test-requires = ["pytest>=8"]
+test-command = "python -m pytest {project}/tests/contracts/package/test_package.py -o addopts= -q"
+build-verbosity = 1
+
+[tool.cibuildwheel.linux]
+archs = ["x86_64"]
+manylinux-x86_64-image = "manylinux_2_28"
+
+[tool.cibuildwheel.macos]
+archs = ["native"]
+environment = { MACOSX_DEPLOYMENT_TARGET = "11.0" }
+
+[tool.cibuildwheel.windows]
+archs = ["AMD64"]
