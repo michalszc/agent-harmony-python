@@ -11,9 +11,9 @@ strict: true
 theme:
   name: material
   palette:
-    primary: blue
+    primary: red
   icon:
-    logo: material/graph
+    logo: material/hexagon-multiple-outline
   features:
     - navigation.sections
     - navigation.indexes
