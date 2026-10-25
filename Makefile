@@ -1,4 +1,4 @@
-.PHONY: help install install-dev submodules check ci-check test test-verbose lint lint-fix format format-check type-check build check-build wheels publish-test publish ci-publish validate-version release-metadata release-select-commit release docs docs-serve examples-check clean
+.PHONY: help install install-dev submodules check ci-check test test-verbose lint lint-fix format format-check type-check build check-build check-install wheels publish-test publish ci-publish validate-version release-metadata release-select-commit release docs docs-serve examples-check clean
 .DEFAULT_GOAL := help
 
 # Prefer the existing environment; CI and callers may override explicitly.
@@ -9,6 +9,7 @@ PYTEST_ARGS ?=
 VALIDATE_VERSION_ARGS ?= --offline
 TWINE_UPLOAD_ARGS ?=
 CHECK ?= test
+CHECK_BUILD_ARGS ?=
 export PYTHON VALIDATE_VERSION_ARGS
 
 help: ## Show available commands
@@ -55,7 +56,10 @@ build: ## Build an sdist, then build its wheel
 
 check-build: ## Check distribution metadata and archive contents
 	$(PYTHON) -m twine check dist/*
-	$(PYTHON) scripts/check_dist.py
+	$(PYTHON) scripts/check_dist.py $(CHECK_BUILD_ARGS)
+
+check-install: ## Verify wheel installation and offline sdist rebuilding
+	$(PYTHON) scripts/check_install.py
 
 wheels: ## Build and test platform wheels with cibuildwheel
 	$(PYTHON) -m cibuildwheel --output-dir wheelhouse

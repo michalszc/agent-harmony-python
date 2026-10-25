@@ -51,6 +51,23 @@ dev = [
 minimum-version = "build-system.requires"
 build-dir = "build/{wheel_tag}"
 wheel.packages = ["src/agent_harmony"]
+sdist.cmake = true
+sdist.inclusion-mode = "explicit"
+# Patterns use gitignore semantics: anchor entries to avoid matching files in .venv.
+sdist.include = [
+    "/pyproject.toml", "/CMakeLists.txt", "/Makefile", "/README.md",
+    "/CONTRIBUTING.md", "/LICENSE*", "/NOTICE", "/mkdocs.yml", "/.gitmodules",
+    "/src/**", "/cpp/**", "/scripts/**", "/tests/**", "/docs/**", "/examples/**",
+    "/external/README.md",
+    "/external/agent-harmony/include/**",
+    "/external/agent-harmony/src/**",
+    "/external/agent-harmony/CMakeLists.txt",
+    "/external/agent-harmony/LICENSE",
+]
+sdist.exclude = [
+    "/.venv/**", "/build/**", "/dist/**", "/site/**", "/wheelhouse/**",
+    "**/__pycache__/**", "**/*.pyc", "**/.git", "**/.git/**",
+]
 
 [tool.ruff]
 line-length = 88
